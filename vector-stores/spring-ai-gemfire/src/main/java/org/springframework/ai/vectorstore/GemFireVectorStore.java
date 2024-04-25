@@ -104,15 +104,26 @@ public class GemFireVectorStore implements VectorStore, InitializingBean {
 
 	private static final String DISTANCE_METADATA_FIELD_NAME = "distance";
 
+	/**
+	 * Initializes the GemFireVectorStore after properties are set. This method is called
+	 * after all bean properties have been set and allows the bean to perform any
+	 * initialization it requires.
+	 */
 	@Override
 	public void afterPropertiesSet() throws Exception {
+		// Delete the index if it exists
 		if (indexExists()) {
 			deleteIndex();
 		}
+		// Create index
 		createIndex();
 
 	}
 
+	/**
+	 * Checks if the specified index exists in the GemFire vector store.
+	 * @return {@code true} if the index exists, {@code false} otherwise
+	 */
 	public boolean indexExists() {
 		return !client.get().uri("/" + indexName).exchange().block().statusCode().is4xxClientError();
 	}
@@ -197,6 +208,13 @@ public class GemFireVectorStore implements VectorStore, InitializingBean {
 		}
 
 	}
+
+	/**
+	 * Configures and initializes a GemFireVectorStore instance based on the provided
+	 * configuration.
+	 * @param config the configuration for the GemFireVectorStore
+	 * @param embeddingClient the embedding client used for generating embeddings
+	 */
 
 	public GemFireVectorStore(GemFireVectorStoreConfig config, EmbeddingClient embeddingClient) {
 		Assert.notNull(config, "GemFireVectorStoreConfig must not be null");
@@ -503,6 +521,12 @@ public class GemFireVectorStore implements VectorStore, InitializingBean {
 			.block();
 	}
 
+	/**
+	 * Creates a new index in the GemFire vector store based on the configured parameters.
+	 * This method is called during initialization to set up the necessary index.
+	 * @throws JsonProcessingException if an error occurs during JSON processing
+	 */
+
 	public void createIndex() throws JsonProcessingException {
 		CreateRequest createRequest = new CreateRequest(indexName);
 		createRequest.setBeamWidth(beamWidth);
@@ -534,6 +558,12 @@ public class GemFireVectorStore implements VectorStore, InitializingBean {
 			.block();
 	}
 
+	/**
+	 * Handles exceptions that occur during HTTP client operations and maps them to
+	 * appropriate runtime exceptions.
+	 * @param ex the exception that occurred during HTTP client operation
+	 * @return a mapped runtime exception corresponding to the HTTP client exception
+	 */
 	private Throwable handleHttpClientException(Throwable ex) {
 		if (!(ex instanceof WebClientResponseException clientException)) {
 			throw new RuntimeException(String.format("Got an unexpected error: %s", ex));
